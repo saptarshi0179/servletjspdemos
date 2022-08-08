@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/adduserServlet") 
+@WebServlet(urlPatterns = "/adduserServlet", loadOnStartup = 2) 
 public class AddUserServlet extends HttpServlet {
 
 	Connection connection;
@@ -26,6 +26,7 @@ public class AddUserServlet extends HttpServlet {
 	public void init(ServletConfig config) throws ServletException {
 
 		try {
+			System.out.println("AddServlet init");
 			ServletContext context = config.getServletContext();
 			Class.forName("com.mysql.jdbc.Driver");
 			connection = DriverManager.getConnection(context.getInitParameter("dburl"),

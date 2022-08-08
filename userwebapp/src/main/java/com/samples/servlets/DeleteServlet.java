@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/deleteServlet")
+@WebServlet(urlPatterns = "/deleteServlet", loadOnStartup = 3)
 public class DeleteServlet extends HttpServlet {
 
 	Connection connection;
@@ -25,6 +25,7 @@ public class DeleteServlet extends HttpServlet {
 	public void init(ServletConfig config) throws ServletException {
 
 		try {
+			System.out.println("DeleteServlet init");
 			ServletContext context = config.getServletContext();
 			Class.forName("com.mysql.jdbc.Driver");
 			connection = DriverManager.getConnection(context.getInitParameter("dburl"),

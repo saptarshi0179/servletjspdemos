@@ -4,10 +4,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -16,16 +17,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet(urlPatterns="/readuserServlet", loadOnStartup = 4)
-public class ReadUsersServlet extends HttpServlet {
 
+@WebServlet("/loginServlet")
+public class LoginServlet extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	
 	Connection connection;
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 
 		try {
-			System.out.println("ReadServlet init");
 			ServletContext context = config.getServletContext();
 			Class.forName("com.mysql.jdbc.Driver");
 			connection = DriverManager.getConnection(context.getInitParameter("dburl"),
@@ -37,39 +39,34 @@ public class ReadUsersServlet extends HttpServlet {
 		}
 
 	}
+       
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		String username = request.getParameter("username");
+		String password = request.getParameter("password");
+		try (PreparedStatement statement = connection.prepareStatement("select * from user where email = ? and password = ?")) {
+			statement.setString(1, username);
+			statement.setString(2, password);
 
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-
-		System.out.println("doGet");
-		try (Statement statement = connection.createStatement();) {
-
-			// resultset = read from db where email = 'x'
-			// if resultset.hasnext() { pw.write("User already exists"); }
-
-			ResultSet results = statement.executeQuery("select * from user");
-			PrintWriter out = response.getWriter();
-			out.println("<table>");
-			out.println("<tr>");
-			out.println("<th>First Name</th>");
-			out.println("<th>Last Name</th>");
-			out.println("<th>Email</th>");
-			out.println("</tr>");
-			while (results.next()) {
-				out.println("<tr>");
-				out.println("<td>" + results.getString(1) + "</td>");
-				out.println("<td>" + results.getString(2) + "</td>");
-				out.println("<td>" + results.getString(3) + "</td>");
-				out.println("</tr>");
+			ResultSet results = statement.executeQuery();
+			
+			if (results.next()) {
+				RequestDispatcher rd = request.getRequestDispatcher("homeServlet");
+				request.setAttribute("message", "User Authenticated. Welcome to InterServlet Communication");
+				rd.forward(request, response);
+			} else {
+				PrintWriter out = response.getWriter();
+				response.setContentType("text/html");
+				out.println("Login Failed");
+				
+				RequestDispatcher rd = request.getRequestDispatcher("login.html");
+				rd.include(request, response);
 			}
-			out.println("</table>");
-			out.println("<p><a href=\"userhome.html\">Home</a></p>");
+			
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-
 	}
-
+	
 	@Override
 	public void destroy() {
 		try {
